@@ -1,0 +1,16 @@
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+  vars:
+    vcenter_host: "your-vcenter-host"
+    vcenter_user: "your-vcenter-username"
+    vcenter_password: "your-vcenter-password"
+    vcenter_datacenter: "your-datacenter"
+    vcenter_cluster: "your-cluster"
+    vcenter_datastore: "your-datastore"
+    vcenter_network: "testlan"
+    vm_folder: "path-to-your-vms-folder"
+    openshift_cluster: "your-openshift-cluster-api"
+    openshift_token: "your-openshift-token"
+    import_namespace: "your-namespace-in-openshift"
