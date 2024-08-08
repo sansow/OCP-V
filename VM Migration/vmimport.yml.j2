@@ -1,0 +1,31 @@
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: "{{ vm_name }}"
+  namespace: "{{ import_namespace }}"
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: "{{ vm_name }}"
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: containerdisk
+          interfaces:
+          - bridge: {}
+            name: default
+        resources:
+          requests:
+            memory: 4Gi
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - containerDisk:
+          image: "{{ import_namespace }}/{{ vm_name }}"
+        name: containerdisk
