@@ -8,16 +8,16 @@ OpenShift CLI (oc) and virtctl installed on the control node.
 Credentials for accessing vCenter and OpenShift.
 SSH access to the OpenShift nodes where the VMs will be imported.
 
-#Step 1: Ansible Inventory
+#Step 1:
 Create an inventory file (inventory.yml) with the details of your vCenter and OpenShift environments.
 
-#Step 2: Ansible Playbook
+#Step 2:
 Create an Ansible playbook (migrate_vms.yml) to automate the migration process.
 
-#Step 3: VM Import YAML Template
+#Step 3:
 Create a template (vmimport.yaml.j2) for importing VMs into OpenShift. This is a basic example, and you may need to customize it further.
 
-#Step 4: Execute the Playbook
+#Step 4:
 To execute the migration, run the playbook with the following command:
 
 ansible-playbook -i inventory.yml migrate_vms.yml
