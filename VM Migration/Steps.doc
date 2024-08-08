@@ -1,0 +1,9 @@
+Automate the migration of 100 VMs from vCenter to OpenShift Virtualization while retaining their IP addresses.
+#Prerequisites:
+Ansible Installed on your control node.
+govc Installed: This is a CLI tool for VMware vCenter that will be used to export VMs.
+OpenShift CLI (oc) and virtctl installed on the control node.
+Credentials for accessing vCenter and OpenShift.
+SSH access to the OpenShift nodes where the VMs will be imported.
+
+  
