@@ -1,0 +1,67 @@
+---
+- name: Migrate VMs from vCenter to OpenShift Virtualization
+  hosts: localhost
+  vars:
+    vm_count: 100
+    vlan_id: testlan
+    base_ip: "192.168.0."  # Base IP address range
+  tasks:
+    - name: Export VMs from vCenter to OVA
+      command: >
+        govc export.ovf -dc={{ vcenter_datacenter }}
+        -ds={{ vcenter_datastore }}
+        -folder={{ vm_folder }}
+        -vm "{{ item }}"
+        -o "/tmp/{{ item }}.ova"
+      with_sequence: start=1 end={{ vm_count }}
+      loop_control:
+        loop_var: vm_id
+      vars:
+        vm_name: "VM{{ vm_id }}"
+
+    - name: Upload OVA to OpenShift
+      command: >
+        oc import-image "{{ item }}"
+        --from="/tmp/{{ item }}.ova"
+        -n {{ import_namespace }}
+      with_sequence: start=1 end={{ vm_count }}
+      loop_control:
+        loop_var: vm_id
+      vars:
+        vm_name: "VM{{ vm_id }}"
+
+    - name: Import VMs into OpenShift
+      command: >
+        virtctl create vmimport vmimport.yaml -n {{ import_namespace }}
+      with_sequence: start=1 end={{ vm_count }}
+      loop_control:
+        loop_var: vm_id
+      vars:
+        vm_name: "VM{{ vm_id }}"
+
+    - name: Set custom MAC addresses and VLAN
+      block:
+        - name: Get existing MAC address from vCenter
+          shell: |
+            govc vm.info -json "{{ vm_name }}" | jq -r '.VirtualMachines[0].Config.Hardware.Device[] | select(.DeviceInfo.Label == "Network adapter 1") | .MacAddress'
+          register: mac_address
+          with_sequence: start=1 end={{ vm_count }}
+          loop_control:
+            loop_var: vm_id
+
+        - name: Set MAC address and VLAN for the imported VM
+          command: >
+            oc patch vm {{ vm_name }} -n {{ import_namespace }}
+            --type=merge -p '{"spec": {"template": {"spec": {"domain": {"devices": {"interfaces": [{"name": "default", "macAddress": "{{ mac_address.stdout }}", "bridge": {"vlanId": "{{ vlan_id }}"}}]}}}}}}}'
+          with_sequence: start=1 end={{ vm_count }}
+          loop_control:
+            loop_var: vm_id
+      when: mac_address.stdout != ""
+
+    - name: Set static IP addresses for the VMs
+      shell: |
+        oc exec {{ vm_name }} -- nmcli con mod eth0 ipv4.addresses "{{ base_ip }}{{ vm_id }}/24"
+        oc exec {{ vm_name }} -- nmcli con up eth0
+      with_sequence: start=1 end={{ vm_count }}
+      loop_control:
+        loop_var: vm_id
